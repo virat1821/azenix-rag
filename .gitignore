@@ -1,0 +1,5 @@
+# Ignore specific files
+chroma.js
+.env
+node_modules
+vectors.json
