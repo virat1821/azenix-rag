@@ -1,27 +1,16 @@
 import fs from "fs";
-import axios from "axios";
 import { saveVectors } from "./vectorStore.js";
 
 const data = fs.readFileSync("./data/data.txt", "utf-8");
-const chunks = data.split("\n");
 
-let vectorData = [];
+// simple chunks
+const chunks = data.split("\n").filter(line => line.trim());
 
-for (let i = 0; i < chunks.length; i++) {
-  const chunk = chunks[i];
-  if (!chunk.trim()) continue;
-
-  const res = await axios.post("https://azenix-rag.onrender.com/", {
-    model: "nomic-embed-text",
-    prompt: chunk,
-  });
-
-  vectorData.push({
-    text: chunk,
-    embedding: res.data.embedding,
-  });
-}
+const vectorData = chunks.map(chunk => ({
+  text: chunk,
+  embedding: [] // dummy (not used)
+}));
 
 saveVectors(vectorData);
 
-console.log("✅ Vectors stored in JSON");
+console.log("✅ Data stored (no embeddings)");
