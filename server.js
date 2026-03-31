@@ -7,18 +7,23 @@ dotenv.config();
 
 const app = express();
 
+// ✅ CORS (simple & correct)
 app.use(cors());
-app.options("*", cors());
+
+// ✅ JSON
 app.use(express.json());
 
+// ✅ Health check
 app.get("/", (req, res) => {
   res.send("Azenix AI backend running 🚀");
 });
 
+// ✅ Groq
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+// ✅ Chat
 app.post("/chat", async (req, res) => {
   try {
     const question = req.body.message;
@@ -26,27 +31,23 @@ app.post("/chat", async (req, res) => {
     const completion = await groq.chat.completions.create({
       model: "llama3-8b-8192",
       messages: [
-        {
-          role: "system",
-          content: "You are Azenix AI assistant. Answer professionally.",
-        },
-        {
-          role: "user",
-          content: question,
-        },
+        { role: "system", content: "You are Azenix AI assistant." },
+        { role: "user", content: question },
       ],
     });
 
-    res.json({
-      reply: completion.choices[0].message.content,
-    });
+    const reply =
+      completion?.choices?.[0]?.message?.content || "No response";
+
+    res.json({ reply });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.json({ reply: "⚠️ Server error" });
   }
 });
 
+// ✅ Start
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
