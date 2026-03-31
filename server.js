@@ -2,33 +2,31 @@ import express from "express";
 import cors from "cors";
 import Groq from "groq-sdk";
 import dotenv from "dotenv";
-import { loadVectors, cosineSimilarity } from "./vectorStore.js";
+import { loadVectors } from "./vectorStore.js";
 
 dotenv.config();
 
 const app = express();
 
-// ✅ CORS (robust + production safe)
+// ✅ CORS (stable)
 const corsOptions = {
-  origin: "*", // change to your domain later
+  origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
 };
 
 app.use(cors(corsOptions));
-
-// ✅ Handle preflight requests explicitly
 app.options("*", cors(corsOptions));
 
 // ✅ Body parser
 app.use(express.json());
 
-// ✅ Health route (for testing)
+// ✅ Health route
 app.get("/", (req, res) => {
   res.send("Azenix AI backend running 🚀");
 });
 
-// ✅ Initialize Groq
+// ✅ Groq init
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -42,18 +40,20 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-   let vectors = [];
+    // ✅ SAFE vector loading
+    let vectors = [];
+    try {
+      vectors = loadVectors();
+    } catch (err) {
+      console.log("⚠️ vectors not found, running without RAG");
+    }
 
-try {
-  vectors = loadVectors();
-} catch (err) {
-  console.log("⚠️ vectors not found, running without RAG");
-  vectors = [];
-}
-
-    // 🔍 Basic retrieval (safe fallback)
-    const top = vectors.slice(0, 3);
-    const context = top.map(v => v.text).join("\n");
+    // ✅ SAFE context
+    let context = "";
+    if (vectors && vectors.length > 0) {
+      const top = vectors.slice(0, 3);
+      context = top.map(v => v.text).join("\n");
+    }
 
     // 🤖 AI call
     const completion = await groq.chat.completions.create({
@@ -82,7 +82,8 @@ You are Azenix AI assistant.
     });
 
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Error:", error.message);
+
     res.status(500).json({
       error: "Server error",
       details: error.message,
@@ -90,7 +91,7 @@ You are Azenix AI assistant.
   }
 });
 
-// ✅ Start server (Render compatible)
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
