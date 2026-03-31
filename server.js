@@ -42,7 +42,14 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const vectors = loadVectors() || [];
+   let vectors = [];
+
+try {
+  vectors = loadVectors();
+} catch (err) {
+  console.log("⚠️ vectors not found, running without RAG");
+  vectors = [];
+}
 
     // 🔍 Basic retrieval (safe fallback)
     const top = vectors.slice(0, 3);
