@@ -24,7 +24,7 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ✅ Chat endpoint (NO RAG — SAFE)
+// ✅ Chat endpoint (NO FILES, NO VECTORS)
 app.post("/chat", async (req, res) => {
   try {
     const question = req.body.message;
