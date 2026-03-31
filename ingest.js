@@ -11,7 +11,7 @@ for (let i = 0; i < chunks.length; i++) {
   const chunk = chunks[i];
   if (!chunk.trim()) continue;
 
-  const res = await axios.post("http://localhost:11434/api/embeddings", {
+  const res = await axios.post("https://azenix-rag.onrender.com/", {
     model: "nomic-embed-text",
     prompt: chunk,
   });
